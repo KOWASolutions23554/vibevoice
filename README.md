@@ -38,6 +38,8 @@ It is intentionally simple: **speech in, prompt out**.
 | **🎙** | **Push-to-talk** | Hold `Ctrl+Win` to record, release to transcribe and paste |
 | **🔒** | **Locked mode** | Double-tap `Ctrl+Win` for hands-free recording, tap again to stop |
 | **🌍** | **Auto language** | Whisper auto-detects your spoken language — or pin one manually |
+| **🔀** | **Mode toggle** | Tap `Ctrl+Alt` to flip between German and German → English, from any app |
+| **⌨** | **Custom record key** | Pick your push-to-talk combo in settings (Ctrl+Win, Ctrl+Shift, Alt+Win, Shift+Win) |
 | **🎯** | **Prompt-first** | Optimized for AI-agent instructions instead of brittle app detection |
 | **⚡** | **Vibe coding vocabulary** | Whisper is primed with Cursor, Composer, agents, refactors, tests and common dev terms |
 | **🧹** | **Hallucination filter** | Suppresses phantom transcriptions on silence |
@@ -156,6 +158,27 @@ The MSI file is created at:
 
 Locked mode shows a `🔒 Locked` indicator in the overlay so you know it's running.
 
+The record combo is configurable in settings — `Ctrl+Win` (default), `Ctrl+Shift`, `Alt+Win`
+or `Shift+Win`.
+
+---
+
+## Language modes
+
+Tap **`Ctrl+Alt`** anywhere to flip between the two modes:
+
+| Mode | Behavior |
+|---|---|
+| **Deutsch** | German in → German out |
+| **Deutsch → English** | German in → English out (translated prompt) |
+
+The overlay flashes the new mode for a moment, and its badge (`DE` / `DE→EN`) shows the active
+mode while recording. The settings window shows it at the bottom too.
+
+The toggle only fires on a clean `Ctrl+Alt` press and release. Any other key in between cancels
+it, so `Ctrl+Alt+<key>` shortcuts keep working — and `AltGr` (which Windows sends as Ctrl +
+*right* Alt) is ignored, so typing `@`, `\` or `~` on a German keyboard never switches the mode.
+
 ---
 
 ## Tech stack
@@ -209,7 +232,8 @@ Settings are stored in `%APPDATA%\vibe-voice-tool\config.json` — never in the 
 {
   "api_key": "gsk_...",
   "language": "auto",
-  "hotkey": "Ctrl+Win"
+  "hotkey": "Ctrl+Win",
+  "autostart": false
 }
 ```
 

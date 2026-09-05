@@ -35,10 +35,16 @@ fn paste_via_clipboard(text: &str, method: InjectMethod) -> Result<(), String> {
         InjectMethod::UnicodeType => unreachable!(),
     }
 
-    thread::sleep(Duration::from_millis(200));
-
+    // The target reads the clipboard asynchronously after the paste keystroke;
+    // restoring too early makes it paste the OLD clipboard content instead.
+    // Restore in the background so the main thread is not blocked.
     if let Some(original) = backup {
-        let _ = clipboard.set_text(&original);
+        thread::spawn(move || {
+            thread::sleep(Duration::from_millis(1500));
+            if let Ok(mut clipboard) = Clipboard::new() {
+                let _ = clipboard.set_text(&original);
+            }
+        });
     }
 
     Ok(())

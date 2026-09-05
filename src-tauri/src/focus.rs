@@ -11,7 +11,7 @@ static TARGET_HWND: AtomicIsize = AtomicIsize::new(0);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InjectMethod {
-    /// Windows Terminal, cmd, PowerShell conhost
+    /// Classic console windows (conhost)
     ShiftInsertPaste,
     /// Browsers, most editors
     CtrlVPaste,
@@ -37,7 +37,13 @@ pub fn inject_method_for_target() -> InjectMethod {
     let class = window_class_name(hwnd);
     let title = window_title(hwnd).to_lowercase();
 
-    if class == "CASCADIA_HOSTING_WINDOW_CLASS" || class == "ConsoleWindowClass" {
+    // Windows Terminal pastes via its Ctrl+V keybinding; Shift+Insert is not
+    // bound in every setup (verified missing on this machine).
+    if class == "CASCADIA_HOSTING_WINDOW_CLASS" {
+        return InjectMethod::CtrlVPaste;
+    }
+
+    if class == "ConsoleWindowClass" {
         return InjectMethod::ShiftInsertPaste;
     }
 
@@ -100,7 +106,6 @@ pub fn target_monitor_center() -> Option<(i32, i32)> {
         Some(((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2))
     }
 }
-
 fn target_hwnd() -> Option<HWND> {
     let raw = TARGET_HWND.load(Ordering::SeqCst);
     if raw == 0 {

@@ -1,10 +1,8 @@
+// A dictated prompt is always a single line: line breaks from Whisper are
+// artifacts, and targets treat them as Enter (terminals run the line, chat
+// inputs submit early).
 pub fn format_transcript(text: &str) -> String {
-    text.lines()
-        .map(|line| line.split_whitespace().collect::<Vec<_>>().join(" "))
-        .collect::<Vec<_>>()
-        .join("\n")
-        .trim()
-        .to_string()
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 #[cfg(test)]
@@ -15,7 +13,7 @@ mod tests {
     fn cleans_prompt_whitespace() {
         assert_eq!(
             format_transcript("  Refactor   this component   \n\n and add tests.  "),
-            "Refactor this component\n\nand add tests."
+            "Refactor this component and add tests."
         );
     }
 

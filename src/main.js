@@ -1,18 +1,26 @@
+import { modeHint, modeLabel } from "./modes.js";
+
 const { invoke } = window.__TAURI__.core;
 
 const apiKeyInput = document.getElementById("api-key");
 const languageSelect = document.getElementById("language");
+const languageHint = document.getElementById("language-hint");
+const hotkeySelect = document.getElementById("hotkey");
 const autostartInput = document.getElementById("autostart");
 const statusPill = document.getElementById("status-pill");
 const statusText = statusPill.querySelector(".status-text");
 const saveButton = document.getElementById("save-config");
 const testButton = document.getElementById("test-api-key");
 const toast = document.getElementById("toast");
+const modeBarValue = document.getElementById("mode-bar-value");
+const tipHotkey = document.getElementById("tip-hotkey");
 
 let toastTimer = null;
 
 function setStatus(text, isError = false) {
   statusText.textContent = text;
+  // The pill clips long errors, so keep the full text reachable on hover.
+  statusPill.title = text;
   statusPill.classList.toggle("error", isError);
 }
 
@@ -24,10 +32,22 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove("visible"), 2200);
 }
 
+function renderLanguage(language) {
+  languageSelect.value = language;
+  languageHint.textContent = modeHint(language);
+  modeBarValue.textContent = modeLabel(language);
+}
+
+function renderHotkeys() {
+  tipHotkey.textContent = hotkeySelect.value;
+}
+
 function populateForm(config) {
   apiKeyInput.value = config.api_key ?? "";
-  languageSelect.value = config.language ?? "auto";
+  hotkeySelect.value = config.hotkey ?? "Ctrl+Win";
   autostartInput.checked = Boolean(config.autostart);
+  renderLanguage(config.language ?? "auto");
+  renderHotkeys();
 }
 
 async function loadConfig() {
@@ -40,11 +60,17 @@ async function loadConfig() {
   }
 }
 
+languageSelect.addEventListener("change", () => {
+  renderLanguage(languageSelect.value);
+});
+
+hotkeySelect.addEventListener("change", renderHotkeys);
+
 saveButton.addEventListener("click", async () => {
   const config = {
     api_key: apiKeyInput.value.trim(),
     language: languageSelect.value,
-    hotkey: "Ctrl+Win",
+    hotkey: hotkeySelect.value,
     autostart: autostartInput.checked,
   };
 
@@ -64,7 +90,7 @@ testButton.addEventListener("click", async () => {
     return;
   }
 
-  setStatus("Testing\u2026");
+  setStatus("Testing…");
   try {
     await invoke("test_api_key", { apiKey });
     setStatus("API key valid");
@@ -82,6 +108,11 @@ window.__TAURI__.event.listen("pipeline-error", (event) => {
   const message = event.payload ?? "Recording failed";
   setStatus(message, true);
   showToast(message);
+});
+
+// Keeps the open settings window in sync when the mode is switched by hotkey.
+window.__TAURI__.event.listen("language-changed", (event) => {
+  renderLanguage(event.payload ?? "auto");
 });
 
 loadConfig();

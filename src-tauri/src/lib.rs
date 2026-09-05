@@ -9,7 +9,7 @@ mod transcription;
 use audio::AudioHandle;
 use config::{load_config, save_config, AppConfig};
 use format::format_transcript;
-use hotkey::{start_hotkey_listener, stop_hotkey_listener, HotkeyAction};
+use hotkey::{set_record_hotkey, start_hotkey_listener, stop_hotkey_listener, HotkeyAction};
 use std::sync::{Arc, Mutex};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -89,6 +89,8 @@ fn save_config_cmd(
 ) -> Result<(), String> {
     apply_autostart(&app, config.autostart)?;
     save_config(&config)?;
+    set_record_hotkey(&config.hotkey);
+    let _ = app.emit("language-changed", config.language.clone());
     *state.config.lock().unwrap() = config;
     Ok(())
 }
@@ -116,12 +118,12 @@ fn position_overlay(overlay: &WebviewWindow, app: &AppHandle) {
     .or_else(|| overlay.current_monitor().ok().flatten());
 
     if let Some(monitor) = monitor {
-        let screen = monitor.size();
-        let origin = monitor.position();
+        // Work area = monitor minus taskbar, so the overlay never hides behind it.
+        let work = monitor.work_area();
         let window = overlay.outer_size().unwrap_or_default();
-        let x = origin.x + (screen.width as i32 - window.width as i32) / 2;
-        let bottom_margin = 28;
-        let y = origin.y + screen.height as i32 - window.height as i32 - bottom_margin;
+        let x = work.position.x + (work.size.width as i32 - window.width as i32) / 2;
+        let bottom_margin = 16;
+        let y = work.position.y + work.size.height as i32 - window.height as i32 - bottom_margin;
         let _ = overlay.set_position(tauri::PhysicalPosition::new(x, y));
     }
 }
@@ -140,6 +142,31 @@ fn hide_overlay(app: &AppHandle) {
     }
 }
 
+// Ctrl+Alt flips between speaking German and having it translated to English.
+// The overlay doubles as the confirmation, so the new mode is visible without
+// opening settings.
+fn toggle_language(app: &AppHandle) {
+    let language = {
+        let state = app.state::<AppState>();
+        let mut config = state.config.lock().unwrap();
+        config.language = if transcription::is_translate_language(&config.language) {
+            "de".to_string()
+        } else {
+            "de-en".to_string()
+        };
+        if let Err(error) = save_config(&config) {
+            eprintln!("Failed to save language: {error}");
+        }
+        config.language.clone()
+    };
+
+    let _ = app.emit("language-changed", language);
+
+    if !hotkey::is_recording() {
+        show_overlay(app);
+    }
+}
+
 fn emit_pipeline_error(app: &AppHandle, message: &str) {
     eprintln!("{message}");
     let _ = app.emit("pipeline-error", message.to_string());
@@ -151,7 +178,7 @@ async fn process_recording(app: AppHandle) {
         match state.audio.stop_recording() {
             Ok(recording) => recording,
             Err(error) => {
-                emit_pipeline_error(&app, &format!("Stop recording failed: {error}"));
+                emit_pipeline_error(&app, &error);
                 return;
             }
         }
@@ -160,7 +187,7 @@ async fn process_recording(app: AppHandle) {
     if !recording.has_speech() {
         emit_pipeline_error(
             &app,
-            "No speech detected. Hold Ctrl+Win longer and speak closer to the mic.",
+            "No speech detected. Hold the keys longer and speak closer to the mic.",
         );
         return;
     }
@@ -225,10 +252,11 @@ pub fn run() {
             audio: AudioHandle::spawn(),
         })
         .setup(move |app| {
-            let autostart = app.state::<AppState>().config.lock().unwrap().autostart;
-            if let Err(error) = apply_autostart(app.handle(), autostart) {
+            let startup_config = app.state::<AppState>().config.lock().unwrap().clone();
+            if let Err(error) = apply_autostart(app.handle(), startup_config.autostart) {
                 eprintln!("Failed to apply autostart setting: {error}");
             }
+            set_record_hotkey(&startup_config.hotkey);
 
             #[cfg(windows)]
             if let Some(main_win) = app.get_webview_window("main") {
@@ -287,7 +315,10 @@ pub fn run() {
                         HotkeyAction::StartRecording => {
                             let state = pipeline_app.state::<AppState>();
                             if let Err(error) = state.audio.start_recording() {
-                                eprintln!("Start recording failed: {error}");
+                                emit_pipeline_error(
+                                    &pipeline_app,
+                                    &format!("Recording failed: {error}"),
+                                );
                             }
                         }
                         HotkeyAction::StopRecording => {
@@ -295,6 +326,9 @@ pub fn run() {
                             tauri::async_runtime::spawn(async move {
                                 process_recording(app).await;
                             });
+                        }
+                        HotkeyAction::ToggleLanguage => {
+                            toggle_language(&pipeline_app);
                         }
                     }
                 }

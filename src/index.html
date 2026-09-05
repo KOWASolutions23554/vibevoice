@@ -59,27 +59,29 @@
 
         <section class="card-grid">
           <div class="card compact">
-            <label for="language">Speech language</label>
+            <label for="language">Sprache & Modus</label>
             <select id="language">
               <option value="auto">Auto-detect</option>
               <option value="de">Deutsch</option>
-              <option value="de-en">Deutsch → English</option>
+              <option value="de-en">Deutsch → English (Übersetzung)</option>
               <option value="en">English</option>
               <option value="uk">Українська</option>
               <option value="fr">Français</option>
               <option value="es">Español</option>
               <option value="it">Italiano</option>
             </select>
+            <p class="hint" id="language-hint">Deutsch rein &middot; Deutsch raus</p>
           </div>
 
           <div class="card compact">
-            <label>Hotkey</label>
-            <div class="hotkey-row">
-              <kbd>Ctrl</kbd>
-              <span class="hotkey-plus">+</span>
-              <kbd>Win</kbd>
-            </div>
-            <p class="hint">Hold to record &middot; Double-tap to lock</p>
+            <label for="hotkey">Aufnahme-Taste</label>
+            <select id="hotkey">
+              <option value="Ctrl+Win">Ctrl + Win</option>
+              <option value="Ctrl+Shift">Ctrl + Shift</option>
+              <option value="Alt+Win">Alt + Win</option>
+              <option value="Shift+Win">Shift + Win</option>
+            </select>
+            <p class="hint">Halten = aufnehmen &middot; Doppeltipp = Dauerbetrieb</p>
           </div>
         </section>
 
@@ -110,12 +112,17 @@
             <div class="tip-icon tip-icon--lock">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <span>Double-tap <kbd>Ctrl+Win</kbd> for hands-free locked recording</span>
+            <span>Double-tap <kbd id="tip-hotkey">Ctrl+Win</kbd> for hands-free locked recording</span>
           </div>
         </section>
       </main>
 
       <footer class="footer">
+        <div class="mode-bar">
+          <span class="mode-bar-label">Aktiver Modus</span>
+          <span class="mode-bar-value" id="mode-bar-value">Auto-Erkennung</span>
+          <span class="mode-bar-keys"><kbd>Ctrl + Alt</kbd> wechselt</span>
+        </div>
         <button id="save-config" class="btn btn-primary" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Save settings

@@ -89,9 +89,34 @@ body {
   letter-spacing: 0.01em;
 }
 
+.mode {
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(124, 58, 237, 0.18);
+  color: #ddd6fe;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+}
+
 .lock {
   font-size: 0.68rem;
   line-height: 1;
+}
+
+/* Confirmation after a Ctrl+Alt mode switch */
+.stage.mode-flash .waveform {
+  display: none;
+}
+
+.stage.mode-flash .pill {
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.stage.mode-flash .status {
+  color: #ede9fe;
 }
 
 .stage.locked .pill {
@@ -121,15 +146,23 @@ body {
     0 0 0 1px rgba(239, 68, 68, 0.2);
 }
 
-.stage.error .waveform {
+.stage.error .waveform,
+.stage.error .mode {
   display: none;
+}
+
+.stage.error .pill {
+  white-space: normal;
 }
 
 .stage.error .status {
   color: #fecaca;
-  max-width: 190px;
+  max-width: 270px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 @keyframes wave {

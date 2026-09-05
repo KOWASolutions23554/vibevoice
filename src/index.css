@@ -137,7 +137,14 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+  max-width: 170px;
   transition: all 0.25s ease;
+}
+
+.status-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .status-pill.error {
@@ -149,6 +156,7 @@ body {
 .status-dot {
   width: 6px;
   height: 6px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: currentColor;
   animation: dotPulse 2s ease-in-out infinite;
@@ -327,19 +335,6 @@ select option {
   color: var(--text);
 }
 
-/* Hotkey display */
-.hotkey-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 6px;
-}
-
-.hotkey-plus {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-}
-
 kbd {
   min-width: 40px;
   padding: 6px 10px;
@@ -359,6 +354,10 @@ kbd {
   color: var(--text-secondary);
   font-size: 0.68rem;
   opacity: 0.7;
+}
+
+.card.compact .hint {
+  margin-top: 6px;
 }
 
 /* Tips section */
@@ -383,7 +382,8 @@ kbd {
   font-weight: 600;
 }
 
-.tip kbd {
+.tip kbd,
+.mode-bar-keys kbd {
   display: inline;
   min-width: auto;
   padding: 2px 6px;
@@ -501,17 +501,52 @@ kbd {
   padding-top: 8px;
 }
 
+/* Active mode line above the save button */
+.mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--surface-border);
+  font-size: 0.7rem;
+}
+
+.mode-bar-label {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.mode-bar-value {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.mode-bar-keys {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
 /* Toast */
 .toast {
   position: fixed;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
+  left: 24px;
+  right: 24px;
+  margin: 0 auto;
+  width: fit-content;
+  transform: translateY(80px);
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 18px 10px 14px;
-  border-radius: 999px;
+  border-radius: 16px;
   background: rgba(16, 20, 34, 0.95);
   border: 1px solid rgba(52, 211, 153, 0.25);
   box-shadow:
@@ -527,7 +562,7 @@ kbd {
 
 .toast.visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
   pointer-events: auto;
 }
 
@@ -540,5 +575,5 @@ kbd {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text);
-  white-space: nowrap;
+  line-height: 1.4;
 }
