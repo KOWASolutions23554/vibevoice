@@ -9,6 +9,12 @@ pub struct AppConfig {
     pub hotkey: String,
     #[serde(default)]
     pub autostart: bool,
+    #[serde(default = "default_microphone")]
+    pub microphone: String,
+}
+
+fn default_microphone() -> String {
+    "default".to_string()
 }
 
 impl Default for AppConfig {
@@ -18,6 +24,7 @@ impl Default for AppConfig {
             language: "auto".to_string(),
             hotkey: "Ctrl+Win".to_string(),
             autostart: false,
+            microphone: "default".to_string(),
         }
     }
 }

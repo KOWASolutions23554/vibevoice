@@ -6,6 +6,8 @@ const apiKeyInput = document.getElementById("api-key");
 const languageSelect = document.getElementById("language");
 const languageHint = document.getElementById("language-hint");
 const hotkeySelect = document.getElementById("hotkey");
+const microphoneSelect = document.getElementById("microphone");
+const microphoneHint = document.getElementById("microphone-hint");
 const autostartInput = document.getElementById("autostart");
 const statusPill = document.getElementById("status-pill");
 const statusText = statusPill.querySelector(".status-text");
@@ -42,6 +44,53 @@ function renderHotkeys() {
   tipHotkey.textContent = hotkeySelect.value;
 }
 
+function renderMicrophoneHint() {
+  if (microphoneSelect.value === "default") {
+    microphoneHint.textContent = "Folgt automatisch dem aktiven Windows-Mikrofon";
+  } else {
+    microphoneHint.textContent = "Fest ausgewähltes Mikrofon";
+  }
+}
+
+async function refreshMicrophones(currentSelection = "default") {
+  try {
+    const devices = await invoke("list_microphones");
+    const active = currentSelection || microphoneSelect.value || "default";
+    microphoneSelect.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "default";
+    defaultOption.textContent = "Standard (Windows-Standard)";
+    microphoneSelect.appendChild(defaultOption);
+
+    let matchFound = active === "default";
+    for (const device of devices) {
+      const option = document.createElement("option");
+      option.value = device;
+      option.textContent = device;
+      if (device === active) {
+        option.selected = true;
+        matchFound = true;
+      }
+      microphoneSelect.appendChild(option);
+    }
+
+    if (!matchFound && active && active !== "default") {
+      const customOption = document.createElement("option");
+      customOption.value = active;
+      customOption.textContent = `${active} (getrennt)`;
+      customOption.selected = true;
+      microphoneSelect.appendChild(customOption);
+    } else if (!matchFound) {
+      defaultOption.selected = true;
+    }
+
+    renderMicrophoneHint();
+  } catch (err) {
+    console.error("Failed to list microphones:", err);
+  }
+}
+
 function populateForm(config) {
   apiKeyInput.value = config.api_key ?? "";
   hotkeySelect.value = config.hotkey ?? "Ctrl+Win";
@@ -53,6 +102,7 @@ function populateForm(config) {
 async function loadConfig() {
   try {
     const config = await invoke("get_config");
+    await refreshMicrophones(config.microphone ?? "default");
     populateForm(config);
     setStatus("Ready");
   } catch (error) {
@@ -65,6 +115,11 @@ languageSelect.addEventListener("change", () => {
 });
 
 hotkeySelect.addEventListener("change", renderHotkeys);
+microphoneSelect.addEventListener("change", renderMicrophoneHint);
+
+window.addEventListener("focus", () => {
+  refreshMicrophones(microphoneSelect.value);
+});
 
 saveButton.addEventListener("click", async () => {
   const config = {
@@ -72,6 +127,7 @@ saveButton.addEventListener("click", async () => {
     language: languageSelect.value,
     hotkey: hotkeySelect.value,
     autostart: autostartInput.checked,
+    microphone: microphoneSelect.value,
   };
 
   try {

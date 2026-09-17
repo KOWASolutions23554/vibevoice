@@ -1,51 +1,6 @@
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
 
-pub fn whisper_prompt() -> String {
-    const TERMS: &[&str] = &[
-        "Cursor",
-        "Composer",
-        "agent",
-        "prompt",
-        "vibe coding",
-        "refactor",
-        "implement",
-        "fix",
-        "debug",
-        "bug",
-        "explain",
-        "optimize",
-        "clean up",
-        "add tests",
-        "unit tests",
-        "integration tests",
-        "component",
-        "hook",
-        "state",
-        "props",
-        "API",
-        "database",
-        "schema",
-        "migration",
-        "TypeScript",
-        "JavaScript",
-        "React",
-        "Next.js",
-        "Tailwind",
-        "Tauri",
-        "Rust",
-        "Node.js",
-        "frontend",
-        "backend",
-        "terminal",
-        "PowerShell",
-        "GitHub",
-        "README",
-    ];
-
-    TERMS.join(", ")
-}
-
 pub fn is_hallucination(text: &str) -> bool {
     let normalized = normalize_transcript(text);
     if normalized.is_empty() {
@@ -297,11 +252,6 @@ pub async fn transcribe(
 
         if !is_auto_language(language) {
             form = form.text("language", language.to_string());
-        }
-
-        let prompt = whisper_prompt();
-        if !prompt.is_empty() {
-            form = form.text("prompt", prompt);
         }
 
         Ok(client

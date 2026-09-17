@@ -41,8 +41,7 @@ It is intentionally simple: **speech in, prompt out**.
 | **🔀** | **Mode toggle** | Tap `Ctrl+Alt` to flip between German and German → English, from any app |
 | **⌨** | **Custom record key** | Pick your push-to-talk combo in settings (Ctrl+Win, Ctrl+Shift, Alt+Win, Shift+Win) |
 | **🎯** | **Prompt-first** | Optimized for AI-agent instructions instead of brittle app detection |
-| **⚡** | **Vibe coding vocabulary** | Whisper is primed with Cursor, Composer, agents, refactors, tests and common dev terms |
-| **🧹** | **Hallucination filter** | Suppresses phantom transcriptions on silence |
+| **🧹** | **Hallucination filter** | Silent tails are trimmed and phantom transcriptions filtered out |
 | **💊** | **Minimal overlay** | Tiny listening pill at the bottom of your screen — never in the way |
 | **🔇** | **System tray** | Lives silently in the tray, zero distractions |
 | **🚀** | **Instant** | Powered by [Groq](https://groq.com/) — transcription in under a second |
@@ -60,7 +59,7 @@ Under the hood:
 1. A low-level keyboard hook captures `Ctrl+Win` globally (works in any app)
 2. Your focused window is saved before recording starts
 3. Audio is captured from your default microphone
-4. Audio is sent to Groq's Whisper API with a vibe-coding prompt vocabulary
+4. Audio is sent to Groq's Whisper API — the silent tail is trimmed first, because phantom words tend to appear there
 5. The transcript is cleaned up as natural prompt text
 6. Focus is restored to your original window and the text is injected
 

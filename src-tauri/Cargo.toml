@@ -1,6 +1,6 @@
 [package]
 name = "vibe-voice-tool"
-version = "0.1.7"
+version = "0.1.8"
 description = "Voice-to-text push-to-talk tool for Vibe Coder"
 authors = ["you"]
 edition = "2021"
@@ -20,6 +20,7 @@ windows = { version = "0.58", features = [
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_System_Threading",
     "Win32_UI_HiDpi",
+    "Win32_System_Com",
 ] }
 cpal = "0.15"
 hound = "3.5"

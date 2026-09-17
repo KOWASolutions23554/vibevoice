@@ -90,9 +90,15 @@ fn save_config_cmd(
     apply_autostart(&app, config.autostart)?;
     save_config(&config)?;
     set_record_hotkey(&config.hotkey);
+    state.audio.set_device(&config.microphone);
     let _ = app.emit("language-changed", config.language.clone());
     *state.config.lock().unwrap() = config;
     Ok(())
+}
+
+#[tauri::command]
+fn list_microphones(state: State<'_, AppState>) -> Vec<String> {
+    state.audio.list_devices()
 }
 
 #[tauri::command]
@@ -247,9 +253,12 @@ pub fn run() {
                 .app_name("Vibe Voice Tool")
                 .build(),
         )
-        .manage(AppState {
-            config: Arc::new(Mutex::new(load_config())),
-            audio: AudioHandle::spawn(),
+        .manage({
+            let cfg = load_config();
+            AppState {
+                config: Arc::new(Mutex::new(cfg.clone())),
+                audio: AudioHandle::spawn(cfg.microphone),
+            }
         })
         .setup(move |app| {
             let startup_config = app.state::<AppState>().config.lock().unwrap().clone();
@@ -350,7 +359,8 @@ pub fn run() {
             get_config,
             save_config_cmd,
             test_api_key,
-            open_url
+            open_url,
+            list_microphones
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
