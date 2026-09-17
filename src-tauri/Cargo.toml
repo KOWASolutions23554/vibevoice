@@ -1,6 +1,6 @@
 [package]
 name = "vibe-voice-tool"
-version = "0.1.8"
+version = "0.1.9"
 description = "Voice-to-text push-to-talk tool for Vibe Coder"
 authors = ["you"]
 edition = "2021"

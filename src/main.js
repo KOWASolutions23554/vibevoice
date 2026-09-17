@@ -110,6 +110,24 @@ async function loadConfig() {
   }
 }
 
+async function verifyApiKey() {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    setStatus("API key missing", true);
+    return false;
+  }
+
+  setStatus("Testing…");
+  try {
+    await invoke("test_api_key", { apiKey });
+    setStatus("API key valid");
+    return true;
+  } catch (error) {
+    setStatus("API key invalid", true);
+    return false;
+  }
+}
+
 languageSelect.addEventListener("change", () => {
   renderLanguage(languageSelect.value);
 });
@@ -140,19 +158,9 @@ saveButton.addEventListener("click", async () => {
 });
 
 testButton.addEventListener("click", async () => {
-  const apiKey = apiKeyInput.value.trim();
-  if (!apiKey) {
-    setStatus("API key missing", true);
-    return;
-  }
-
-  setStatus("Testing…");
-  try {
-    await invoke("test_api_key", { apiKey });
-    setStatus("API key valid");
+  const valid = await verifyApiKey();
+  if (valid) {
     showToast("API key is valid");
-  } catch (error) {
-    setStatus("API key invalid", true);
   }
 });
 
@@ -169,6 +177,12 @@ window.__TAURI__.event.listen("pipeline-error", (event) => {
 // Keeps the open settings window in sync when the mode is switched by hotkey.
 window.__TAURI__.event.listen("language-changed", (event) => {
   renderLanguage(event.payload ?? "auto");
+});
+
+// Re-check the saved API key every time the settings window is opened, so the
+// status pill always shows the current key state without a manual test click.
+window.__TAURI__.event.listen("settings-shown", () => {
+  verifyApiKey();
 });
 
 loadConfig();

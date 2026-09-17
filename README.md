@@ -2,11 +2,11 @@
 
 ### Talk to your AI coding agent. Literally.
 
-**Vibe Voice** is a prompt-first voice-to-text tool built for vibe coding. Hold a hotkey, speak your next instruction, and watch it appear exactly where your cursor is — ready for Cursor, Composer, ChatGPT, Claude, or any AI coding workflow.
+**Vibe Voice** is a prompt-first voice-to-text tool built for vibe coding. Hold a hotkey, speak your next instruction, and watch it appear exactly where your cursor is — ready for Cursor, Claude, ChatGPT, or any AI coding workflow.
 
 No modes. No context guessing. Just fast, accurate prompts.
 
-[![Vibe Voice — free voice-to-text for vibe coding on Windows](src/assets/promo-banner.png)](https://github.com/Fabian06051999/vibevoice/releases)
+[![Vibe Voice — free voice-to-text for vibe coding on Windows](src/assets/promo-banner.png)](https://github.com/KOWASolutions23554/vibevoice/releases)
 
 ![Windows](https://img.shields.io/badge/platform-Windows_10%2F11-0078D4?logo=windows&logoColor=white)
 ![Tauri 2](https://img.shields.io/badge/built_with-Tauri_2.0-7C3AED?logo=tauri&logoColor=white)
@@ -40,10 +40,13 @@ It is intentionally simple: **speech in, prompt out**.
 | **🌍** | **Auto language** | Whisper auto-detects your spoken language — or pin one manually |
 | **🔀** | **Mode toggle** | Tap `Ctrl+Alt` to flip between German and German → English, from any app |
 | **⌨** | **Custom record key** | Pick your push-to-talk combo in settings (Ctrl+Win, Ctrl+Shift, Alt+Win, Shift+Win) |
+| **🎤** | **Microphone picker** | Follow the active Windows mic automatically, or lock a specific device |
 | **🎯** | **Prompt-first** | Optimized for AI-agent instructions instead of brittle app detection |
 | **🧹** | **Hallucination filter** | Silent tails are trimmed and phantom transcriptions filtered out |
-| **💊** | **Minimal overlay** | Tiny listening pill at the bottom of your screen — never in the way |
-| **🔇** | **System tray** | Lives silently in the tray, zero distractions |
+| **🩹** | **No clipped words** | A short pre-roll buffers audio before you even press, so word starts survive |
+| **💊** | **Minimal overlay** | Tiny listening pill with a mode badge (`DE` / `DE→EN`) — never in the way |
+| **🔇** | **System tray** | Lives silently in the tray, starts with Windows if you want |
+| **✅** | **Key check on open** | Settings validates your Groq API key automatically every time it opens |
 | **🚀** | **Instant** | Powered by [Groq](https://groq.com/) — transcription in under a second |
 
 ---
@@ -58,12 +61,13 @@ Under the hood:
 
 1. A low-level keyboard hook captures `Ctrl+Win` globally (works in any app)
 2. Your focused window is saved before recording starts
-3. Audio is captured from your default microphone
-4. Audio is sent to Groq's Whisper API — the silent tail is trimmed first, because phantom words tend to appear there
-5. The transcript is cleaned up as natural prompt text
-6. Focus is restored to your original window and the text is injected
+3. Audio is captured from your microphone, with a 250 ms pre-roll so the first word is never clipped
+4. The silent tail of the recording is trimmed — that's exactly where Whisper tends to invent words
+5. Audio is sent to Groq's Whisper API
+6. The transcript is cleaned up as natural prompt text
+7. Focus is restored to your original window and the text is injected at your cursor
 
-The entire pipeline typically completes in **under 2 seconds**.
+The entire pipeline typically completes in **under 2 seconds**. Transient Groq hiccups (rate limits, server errors) are retried once automatically so you rarely have to re-speak a sentence.
 
 ---
 
@@ -93,7 +97,7 @@ Examples:
 
 ### Download & install
 
-1. Go to [**Releases**](https://github.com/Fabian06051999/vibevoice/releases) and download the MSI for your language:
+1. Go to [**Releases**](https://github.com/KOWASolutions23554/vibevoice/releases) and download the MSI for your language:
    - English: `Vibe Voice Tool_*_x64_en-US.msi`
    - German: `Vibe Voice Tool_*_x64_de-DE.msi`
 2. Double-click the `.msi` file — Windows opens the familiar installer wizard:
@@ -109,7 +113,7 @@ To uninstall later: **Settings → Apps → Installed apps → Vibe Voice Tool �
 
 1. The app starts in the **system tray** (bottom-right)
 2. Right-click the tray icon → **Settings**
-3. Paste your **own Groq API key** (or click the link to get one free)
+3. Paste your **own Groq API key** (or click the link to get one free) — Vibe Voice checks it automatically and shows **API key valid** in the top-right corner
 4. Leave language on **Auto-detect** or pick one
 5. **Save settings** — you'll see a confirmation toast
 6. Hold `Ctrl+Win` and start talking
@@ -129,7 +133,7 @@ For developers who want to run or build the app locally:
 ### Build & run
 
 ```bash
-git clone https://github.com/Fabian06051999/vibevoice.git
+git clone https://github.com/KOWASolutions23554/vibevoice.git
 cd vibevoice
 npm install
 npm run dev
@@ -164,12 +168,14 @@ or `Shift+Win`.
 
 ## Language modes
 
-Tap **`Ctrl+Alt`** anywhere to flip between the two modes:
+Pick a language in settings, or tap **`Ctrl+Alt`** anywhere to flip between the two dictation modes:
 
 | Mode | Behavior |
 |---|---|
+| **Auto-detect** | Whisper detects whatever you speak |
 | **Deutsch** | German in → German out |
 | **Deutsch → English** | German in → English out (translated prompt) |
+| **English / Українська / Français / Español / Italiano** | Fixed language in → same language out |
 
 The overlay flashes the new mode for a moment, and its badge (`DE` / `DE→EN`) shows the active
 mode while recording. The settings window shows it at the bottom too.
@@ -180,6 +186,25 @@ it, so `Ctrl+Alt+<key>` shortcuts keep working — and `AltGr` (which Windows se
 
 ---
 
+## Microphones
+
+Settings → **Mikrofon**:
+
+- **Standard** (default): Vibe Voice follows whatever mic Windows currently uses — unplug a headset, plug in a new one, it just keeps working
+- **A specific device**: The selected mic is used no matter what Windows says
+
+If the audio stream dies mid-recording (device removed, sleep/resume), Vibe Voice reconnects automatically and tells you when a recording was lost, instead of silently transcribing silence.
+
+---
+
+## Privacy
+
+- Your **API key never leaves your machine** — it is stored locally in your own config file, never in the app, the installer, or this repo
+- **Audio is sent to Groq** for transcription, that's how the tool works — nothing else is transmitted
+- **No telemetry, no analytics, no account**
+
+---
+
 ## Tech stack
 
 | Layer | Technology |
@@ -187,8 +212,9 @@ it, so `Ctrl+Alt+<key>` shortcuts keep working — and `AltGr` (which Windows se
 | App framework | [Tauri 2.0](https://v2.tauri.app/) |
 | Backend | Rust |
 | Frontend | Vanilla HTML / CSS / JS |
-| Audio capture | [cpal](https://crates.io/crates/cpal) + [hound](https://crates.io/crates/hound) |
+| Audio capture | [cpal](https://crates.io/crates/cpal) + [hound](https://crates.io/crates/hound), 16 kHz mono WAV |
 | Transcription | [Groq Whisper](https://groq.com/) (whisper-large-v3-turbo) |
+| Translation | Groq (compound-mini) for the German → English mode |
 | Keyboard hook | Win32 `WH_KEYBOARD_LL` |
 | Text injection | Win32 `SendInput` / Clipboard |
 | DPI support | Per-monitor DPI aware v2 |
@@ -203,12 +229,13 @@ vibevoice/
 │   ├── index.html / index.css    # Settings window
 │   ├── overlay.html / .css / .js # Recording overlay pill
 │   ├── main.js                   # Settings logic + toast
+│   ├── modes.js                  # Shared language-mode labels
 │   └── assets/logo.svg           # App logo
 ├── src-tauri/
 │   ├── src/
 │   │   ├── lib.rs                # Orchestration, tray, pipeline
-│   │   ├── audio.rs              # Microphone recording
-│   │   ├── transcription.rs      # Groq Whisper client
+│   │   ├── audio.rs              # Microphone recording + silence trimming
+│   │   ├── transcription.rs      # Groq Whisper client + hallucination filter
 │   │   ├── hotkey.rs             # Global hotkey + locked mode
 │   │   ├── focus.rs              # Focus capture/restore
 │   │   ├── clipboard.rs          # Text injection methods
@@ -232,11 +259,23 @@ Settings are stored in `%APPDATA%\vibe-voice-tool\config.json` — never in the 
   "api_key": "gsk_...",
   "language": "auto",
   "hotkey": "Ctrl+Win",
-  "autostart": false
+  "autostart": false,
+  "microphone": "default"
 }
 ```
 
 You must bring your own Groq API key. The app never ships with one, and your saved key stays local on your machine.
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| “No speech detected” | Speak a full sentence and hold the key a bit longer — very short mumbles are filtered out on purpose |
+| “API key invalid” in settings | Create a fresh key at [console.groq.com/keys](https://console.groq.com/keys) and paste it, then click **Save settings** |
+| Wrong language detected | Pin your language in settings instead of **Auto-detect** |
+| Phantom words at the end of a transcript | This should be gone in 0.1.8+ — silent tails are trimmed before transcription. If you still see it, please open an issue |
 
 ---
 
