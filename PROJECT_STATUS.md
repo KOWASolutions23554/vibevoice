@@ -16,8 +16,9 @@
 - Warten auf Fabians Test der Übersetzung (de-en-Modus, Ctrl+Alt).
 
 **Nächster konkreter Schritt:**
-- Nichts offen. Fix ist von Fabian getestet und wird mit diesem Handover committet/pusht.
-- Beim nächsten Release: Version auf 0.1.10 erhöhen.
+- Nichts offen. Übersetzungs-Fix getestet, Version 0.1.10 gebaut, lokal installiert,
+  gestartet und gepusht. GitHub-Release ( MSI-Download) kann bei Bedarf über die
+  Release-Workflow nachgereicht werden — lokal ist alles aktuell.
 
 **Entscheidungen:**
 - 24.09.2026: Linux-Support analysiert, aber von Fabian bewusst NICHT umgesetzt.
@@ -25,8 +26,7 @@
   keine globalen Modifier-Hold-Hotkeys; X11-Port wäre machbar, gewünscht ist er nicht.)
 
 **Offene Fragen:**
-- Versionsnummer wurde NICHT erhöht (weiterhin 0.1.9). Für den nächsten Release auf
-  0.1.10 erhöhen, damit Updates sauber erkannt werden.
+- Keine.
 
 **Stolpersteine:**
 - Windows Installer-Cache war beschädigt (fehlende LocalPackage) — Deinstallation per
