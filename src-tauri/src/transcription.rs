@@ -133,7 +133,7 @@ async fn translate_text_to_english(text: &str, api_key: &str) -> Result<String, 
     let user_content = format!("German text to translate:\n\"{text}\"");
 
     let request = ChatCompletionRequest {
-        model: "groq/compound-mini",
+        model: "openai/gpt-oss-20b",
         temperature: 0.0,
         max_tokens: 1024,
         messages: vec![
