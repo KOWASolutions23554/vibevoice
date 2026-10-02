@@ -9,6 +9,7 @@ const hotkeySelect = document.getElementById("hotkey");
 const microphoneSelect = document.getElementById("microphone");
 const microphoneHint = document.getElementById("microphone-hint");
 const autostartInput = document.getElementById("autostart");
+const remoteTypingInput = document.getElementById("remote-typing");
 const statusPill = document.getElementById("status-pill");
 const statusText = statusPill.querySelector(".status-text");
 const saveButton = document.getElementById("save-config");
@@ -95,6 +96,7 @@ function populateForm(config) {
   apiKeyInput.value = config.api_key ?? "";
   hotkeySelect.value = config.hotkey ?? "Ctrl+Win";
   autostartInput.checked = Boolean(config.autostart);
+  remoteTypingInput.checked = Boolean(config.remote_typing);
   renderLanguage(config.language ?? "auto");
   renderHotkeys();
 }
@@ -146,6 +148,7 @@ saveButton.addEventListener("click", async () => {
     hotkey: hotkeySelect.value,
     autostart: autostartInput.checked,
     microphone: microphoneSelect.value,
+    remote_typing: remoteTypingInput.checked,
   };
 
   try {

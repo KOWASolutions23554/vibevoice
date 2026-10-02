@@ -221,9 +221,10 @@ async fn process_recording(app: AppHandle) {
                 hide_overlay(&app);
 
                 let text_to_insert = text;
+                let remote_typing = config.remote_typing;
                 let (tx, rx) = std::sync::mpsc::sync_channel(1);
                 if let Err(error) = app.run_on_main_thread(move || {
-                    let result = clipboard::inject_text(&text_to_insert);
+                    let result = clipboard::inject_text(&text_to_insert, remote_typing);
                     let _ = tx.send(result);
                 }) {
                     emit_pipeline_error(&app, &format!("Failed to schedule paste: {error}"));

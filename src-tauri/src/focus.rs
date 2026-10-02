@@ -17,6 +17,8 @@ pub enum InjectMethod {
     CtrlVPaste,
     /// Direct keystrokes — works reliably in Cursor / VS Code
     UnicodeType,
+    /// Real key presses (scancodes) — the only thing Parsec forwards reliably
+    ScancodeType,
 }
 
 pub fn capture_target_window() {

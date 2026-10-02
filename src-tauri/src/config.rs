@@ -11,6 +11,8 @@ pub struct AppConfig {
     pub autostart: bool,
     #[serde(default = "default_microphone")]
     pub microphone: String,
+    #[serde(default)]
+    pub remote_typing: bool,
 }
 
 fn default_microphone() -> String {
@@ -25,6 +27,7 @@ impl Default for AppConfig {
             hotkey: "Ctrl+Win".to_string(),
             autostart: false,
             microphone: "default".to_string(),
+            remote_typing: false,
         }
     }
 }

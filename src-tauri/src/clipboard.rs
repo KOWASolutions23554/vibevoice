@@ -4,18 +4,26 @@ use std::mem::size_of;
 use std::thread;
 use std::time::Duration;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE,
-    VIRTUAL_KEY, VK_CONTROL, VK_INSERT, VK_RETURN, VK_SHIFT, VK_TAB, VK_V,
+    MapVirtualKeyW, SendInput, VkKeyScanW, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT,
+    KEYBD_EVENT_FLAGS, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_SCANCODE,
+    KEYEVENTF_UNICODE, MAPVK_VK_TO_CHAR, MAPVK_VK_TO_VSC, VIRTUAL_KEY, VK_CONTROL, VK_INSERT,
+    VK_LCONTROL, VK_LSHIFT, VK_RETURN, VK_RMENU, VK_SHIFT, VK_SPACE, VK_TAB, VK_V,
 };
 
-pub fn inject_text(text: &str) -> Result<(), String> {
+pub fn inject_text(text: &str, remote_typing: bool) -> Result<(), String> {
     thread::sleep(Duration::from_millis(120));
 
-    let method = prepare_target_for_input()?;
+    let detected = prepare_target_for_input()?;
+    let method = if remote_typing {
+        InjectMethod::ScancodeType
+    } else {
+        detected
+    };
     thread::sleep(Duration::from_millis(80));
 
     match method {
         InjectMethod::UnicodeType => type_unicode(text),
+        InjectMethod::ScancodeType => type_scancodes(text),
         InjectMethod::ShiftInsertPaste | InjectMethod::CtrlVPaste => {
             paste_via_clipboard(text, method)
         }
@@ -32,7 +40,7 @@ fn paste_via_clipboard(text: &str, method: InjectMethod) -> Result<(), String> {
     match method {
         InjectMethod::ShiftInsertPaste => send_shift_insert()?,
         InjectMethod::CtrlVPaste => send_ctrl_v()?,
-        InjectMethod::UnicodeType => unreachable!(),
+        InjectMethod::UnicodeType | InjectMethod::ScancodeType => unreachable!(),
     }
 
     // The target reads the clipboard asynchronously after the paste keystroke;
@@ -54,22 +62,23 @@ fn type_unicode(text: &str) -> Result<(), String> {
     let mut inputs = Vec::with_capacity(text.len() * 2);
 
     for ch in text.chars() {
-        match ch {
-            '\n' => {
-                inputs.push(key_event(VK_RETURN, Default::default()));
-                inputs.push(key_event(VK_RETURN, KEYEVENTF_KEYUP));
-            }
-            '\t' => {
-                inputs.push(key_event(VK_TAB, Default::default()));
-                inputs.push(key_event(VK_TAB, KEYEVENTF_KEYUP));
-            }
-            _ => {
-                push_unicode_char(&mut inputs, ch);
-            }
+        if !push_control_key(&mut inputs, ch) {
+            push_unicode_char(&mut inputs, ch);
         }
     }
 
     send_inputs_in_chunks(&inputs)
+}
+
+fn push_control_key(inputs: &mut Vec<INPUT>, ch: char) -> bool {
+    let virtual_key = match ch {
+        '\n' => VK_RETURN,
+        '\t' => VK_TAB,
+        _ => return false,
+    };
+    inputs.push(key_event(virtual_key, Default::default()));
+    inputs.push(key_event(virtual_key, KEYEVENTF_KEYUP));
+    true
 }
 
 fn push_unicode_char(inputs: &mut Vec<INPUT>, ch: char) {
@@ -92,6 +101,75 @@ fn unicode_event(
                 wVk: VIRTUAL_KEY(0),
                 wScan: unit,
                 dwFlags: flags | KEYEVENTF_UNICODE,
+                time: 0,
+                dwExtraInfo: 0,
+            },
+        },
+    }
+}
+
+// Remote desktop clients like Parsec forward physical key presses, but drop
+// Unicode packets and do not reliably sync the clipboard. So every character
+// is typed as the real key (scancode) of the current keyboard layout.
+fn type_scancodes(text: &str) -> Result<(), String> {
+    let mut inputs = Vec::with_capacity(text.len() * 4);
+    for ch in text.chars() {
+        if !push_control_key(&mut inputs, ch) {
+            push_scancode_char(&mut inputs, ch);
+        }
+    }
+    send_inputs_in_chunks(&inputs)
+}
+
+fn push_scancode_char(inputs: &mut Vec<INPUT>, ch: char) {
+    let scan = u16::try_from(ch as u32).map_or(-1, |unit| unsafe { VkKeyScanW(unit) });
+
+    // Only plain, Shift and AltGr keys are typeable; anything else (e.g. emoji)
+    // falls back to a Unicode packet. AltGr goes out as Ctrl + RIGHT Alt, so the
+    // Ctrl + left Alt mode toggle never fires while typing @, € or \.
+    let modifiers: &[VIRTUAL_KEY] = match (scan >> 8) & 0xFF {
+        0 => &[],
+        1 => &[VK_LSHIFT],
+        6 => &[VK_LCONTROL, VK_RMENU],
+        7 => &[VK_LCONTROL, VK_RMENU, VK_LSHIFT],
+        _ => return push_unicode_char(inputs, ch),
+    };
+    let vk = VIRTUAL_KEY((scan & 0xFF) as u16);
+
+    for &modifier in modifiers {
+        inputs.push(scancode_event(modifier, Default::default()));
+    }
+    push_scancode_tap(inputs, vk);
+    for &modifier in modifiers.iter().rev() {
+        inputs.push(scancode_event(modifier, KEYEVENTF_KEYUP));
+    }
+
+    // Dead keys (^ ` ´ on German layouts) only print after a following space.
+    if unsafe { MapVirtualKeyW(vk.0 as u32, MAPVK_VK_TO_CHAR) } & 0x8000_0000 != 0 {
+        push_scancode_tap(inputs, VK_SPACE);
+    }
+}
+
+fn push_scancode_tap(inputs: &mut Vec<INPUT>, virtual_key: VIRTUAL_KEY) {
+    inputs.push(scancode_event(virtual_key, Default::default()));
+    inputs.push(scancode_event(virtual_key, KEYEVENTF_KEYUP));
+}
+
+fn scancode_event(virtual_key: VIRTUAL_KEY, flags: KEYBD_EVENT_FLAGS) -> INPUT {
+    let scan = unsafe { MapVirtualKeyW(virtual_key.0 as u32, MAPVK_VK_TO_VSC) } as u16;
+    let extended = if virtual_key == VK_RMENU {
+        KEYEVENTF_EXTENDEDKEY
+    } else {
+        Default::default()
+    };
+
+    INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: virtual_key,
+                wScan: scan,
+                dwFlags: flags | extended | KEYEVENTF_SCANCODE,
                 time: 0,
                 dwExtraInfo: 0,
             },
@@ -155,4 +233,33 @@ fn send_inputs(inputs: &[INPUT]) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn scancode_inputs(ch: char) -> Vec<INPUT> {
+        let mut inputs = Vec::new();
+        push_scancode_char(&mut inputs, ch);
+        inputs
+    }
+
+    #[test]
+    fn plain_letter_is_one_key_press() {
+        assert_eq!(scancode_inputs('a').len(), 2);
+    }
+
+    #[test]
+    fn capital_letter_adds_shift() {
+        assert_eq!(scancode_inputs('A').len(), 4);
+    }
+
+    #[test]
+    fn emoji_falls_back_to_unicode() {
+        let inputs = scancode_inputs('🎤');
+        assert!(inputs
+            .iter()
+            .all(|input| unsafe { input.Anonymous.ki.dwFlags.contains(KEYEVENTF_UNICODE) }));
+    }
 }
