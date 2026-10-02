@@ -22,6 +22,8 @@
 - Warten auf Fabians Test des Remote-Modus über Parsec.
 
 **Nächster konkreter Schritt:**
+- VibeVoice läuft bei Parsec-Nutzung auf dem LAPTOP (Parsec-Client), nicht auf dem PC.
+  GitHub-Release v0.1.11 (MSI) ist gebaut; Fabian installiert es auf dem Laptop.
 - Fabian testet: Schalter an → Speichern → Parsec-Fenster anklicken → diktieren.
   Kommen Zeichen verschluckt oder falsch an: Tipp-Tempo in `send_inputs_in_chunks`
   drosseln bzw. Tastaturlayout beider PCs vergleichen (muss gleich sein, z. B. beide Deutsch).
