@@ -8,7 +8,7 @@
   Zwischenablage eingefügt, sondern als echte Tastendrücke (Scancodes, passend zum
   Tastaturlayout) getippt (`InjectMethod::ScancodeType` in clipboard.rs). AltGr-Zeichen
   (@ € \) gehen als Strg+RECHTS-Alt raus, damit der Strg+Alt-Modusumschalter nicht
-  auslöst. Tests 18/18 grün, MSI gebaut und installiert.
+  auslöst. Tests 18/18 grün, auf PC und Laptop installiert, über Parsec getestet: funktioniert.
 - Bugfix Deutsch→Englisch-Übersetzung (24.09., final): Groq hat ALLE alten Chat-Modelle
   abgeschaltet — zuerst `groq/compound-mini`, dann auch den Zwischenfix
   `llama-3.1-8b-instant` (daher funktionierte der erste Fix nicht). Jetzt aktiv:
@@ -19,14 +19,12 @@
   beschädigt, LocalPackage fehlte) manuell bereinigt und danach sauber neu installiert.
 
 **In Arbeit:**
-- Warten auf Fabians Test des Remote-Modus über Parsec.
+- Nichts.
 
 **Nächster konkreter Schritt:**
-- VibeVoice läuft bei Parsec-Nutzung auf dem LAPTOP (Parsec-Client), nicht auf dem PC.
-  GitHub-Release v0.1.11 (MSI) ist gebaut; Fabian installiert es auf dem Laptop.
-- Fabian testet: Schalter an → Speichern → Parsec-Fenster anklicken → diktieren.
-  Kommen Zeichen verschluckt oder falsch an: Tipp-Tempo in `send_inputs_in_chunks`
-  drosseln bzw. Tastaturlayout beider PCs vergleichen (muss gleich sein, z. B. beide Deutsch).
+- Nichts offen. Remote-Modus (v0.1.11) am 02.10. von Fabian über Parsec erfolgreich getestet
+  (VibeVoice läuft dabei auf dem LAPTOP, gesteuert wird der PC). Updates für den Laptop
+  kommen über GitHub-Releases (Tag `v*` pushen → Workflow baut MSI).
 
 **Entscheidungen:**
 - 24.09.2026: Linux-Support analysiert, aber von Fabian bewusst NICHT umgesetzt.
